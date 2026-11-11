@@ -276,6 +276,7 @@ const Clients = {
     if (["tableau", "clients", "prospects", "suivi-clients", "comptes", "suivi-commercial", "newsletter"].indexOf(courant) > -1){ Store.retourVers = courant; ListeCoach.memoriser(courant); }   // v83 : la position de la page, retrouvée au retour
     else if (Store.idConsulte !== p || !Store.retourVers) Store.retourVers = "clients";
     Store.oublier(Store.idConsulte);
+    if (typeof EnteteFiche !== "undefined") EnteteFiche.oublier(p);   // v106 (lot 2, relecture) : l'en-tête est relu à chaque ouverture
     Store.idConsulte = p; Store.nomConsulte = nom;
     location.hash = "#/client/" + p + "/" + (cible || "accueil");
   },

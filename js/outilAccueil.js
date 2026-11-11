@@ -234,7 +234,7 @@ const outilAccueil = {
        prêt du prospect : il s'appelle « Message WhatsApp prêt », pour ne pas porter le même texte que celui du bandeau */
     /* v106 (lot 2) : le statut, WhatsApp (message prêt) et Appeler sont dans l'en-tête de la fiche (EnteteFiche, navigation.js) ;
        ici reste « Préparer le call » d'un client */
-    const principal = prospectF ? "" : `<a class="btn fc-principal" id="fc-call" href="${esc(lienOutil("bilan"))}">Préparer le call</a>`;
+    const principal = prospectF ? "" : `<a class="btn ghost fc-principal" id="fc-call" href="${esc(lienOutil("bilan"))}">Préparer le call</a>`;
     /* v99 : #/client/<id>/accueil/compte (Profil › Son compte) ouvre l'onglet Compte */
     /* v99 (relecture) : le panneau suit l'adresse seulement (…/accueil = Suivi, sous l'onglet Aperçu ; …/accueil/compte = Compte,
        sous Profil) : « Aperçu » rouvre toujours le Suivi (une action de Compte qui redessine la fiche reste sur Compte).
@@ -327,7 +327,7 @@ const outilAccueil = {
       <div class="fc-panneau" id="fc-compte"${onglet === "compte" ? "" : " hidden"}>
         <section class="carte fc-carte" id="fc-infos"><ul class="fiche-l fc-lignes">
           <li><span>${esc(trad("Email"))}</span><b data-notr id="fc-email">${emailF ? esc(emailF) : "—"}</b></li>
-          <li><span>${esc(trad("Téléphone"))}</span><b id="fiche-tel">${Telephone.coachHTML(tel, "lc-lien", messageWhatsAppCoach(pFiche, I, anglais))}</b></li>
+          <li><span>${esc(trad("Téléphone"))}</span><b id="fiche-tel">${Telephone.valide(tel) ? `<span class="tel-num" data-notr>${esc(tel)}</span>` : "—"}</b></li>
           <li><span>${esc(trad("Source"))}</span><b id="fiche-source" data-notr>${esc(Contact.ref(d.contact) || "—")}</b></li>
           <li><span>${esc(trad("Rôle"))}</span><b><span id="fc-role">${esc(trad(prospectF ? "Prospect" : "Client"))}</span></b></li>
           <li><span>${esc(trad("Dernière connexion"))}</span><b id="fc-derniere" title="${esc(Connexions.aide(cxF))}">${esc(Connexions.texteDerniere(cxF))}</b></li>

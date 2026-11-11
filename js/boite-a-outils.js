@@ -194,14 +194,6 @@ function boutonWhatsApp(classe, id){
   const l = lienWhatsApp(); if (!l) return "";
   return `<div class="actions ${esc(classe || "")}"${id ? ` id="${esc(id)}"` : ""}><a class="btn ghost" href="${esc(l)}" target="_blank" rel="noopener" data-wa>${esc(trad(DECOUVERTE.whatsapp.bouton))}</a></div>`;
 }
-/* v83 (bloc 3, G) — le bouton WhatsApp du coach vers une personne (fiche d'un prospect) : la même logique wa.me (lienWaVers),
-   le message pré-rempli ; sans numéro valable, un bouton grisé « Pas de numéro ». Rien ne part tout seul. */
-function boutonWhatsAppVers(tel, message, classe, id){
-  const l = Telephone.valide(tel) ? lienWaVers(tel, message) : "";
-  const c = esc(classe || "btn"), i = id ? ` id="${esc(id)}"` : "";
-  return l ? `<a class="${c}"${i} href="${esc(l)}" target="_blank" rel="noopener" data-wa-coach>${SVG.whatsapp}<span>${esc(trad("WhatsApp"))}</span></a>`
-    : `<button type="button" class="${c} sans-numero"${i} disabled data-wa-coach>${esc(trad("Pas de numéro"))}</button>`;
-}
 /* v52 — « écris-nous » : une phrase (clé française, traduite par trad) dont {e} devient l'adresse email du coach, en lien
    mailto (CONFIG.marque.email). Sert tant que l'app n'envoie aucun email (mot de passe oublié, changement d'adresse). */
 function ecrisNous(phrase, id, classe){

@@ -202,15 +202,12 @@ ul.erreurs li{margin-bottom:5px}
 .j-onglet .j-kcal{font-size:11px;color:var(--ink-3);font-family:inherit;font-variant-numeric:tabular-nums}
 ul.courses-l li.pris{opacity:.5}
 ul.courses-l li.pris .coche{text-decoration:line-through}
-.bandeau-tete{display:flex;flex-direction:column;gap:2px}
 .bandeau-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
 .b-act{display:inline-flex;align-items:center;text-decoration:none;font-size:13px;font-weight:500;min-height:34px;
   padding:6px 13px;border-radius:999px;border:1px solid var(--line-strong);color:var(--ink-2);background:var(--surface);transition:border-color var(--vite),color var(--vite),background var(--vite)}
 .b-act:hover{border-color:var(--accent);color:var(--accent)}
 .b-act.fort{border-color:var(--accent-line);color:var(--accent);background:var(--accent-soft)}
 .b-act.ici{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
-.bandeau-actions .sortir{margin-left:auto}
-@media(max-width:560px){.bandeau-actions .sortir{margin-left:0;width:100%}}
 #tb-clients td{vertical-align:middle}
 #tb-clients .voir{font:inherit;font-size:12px;padding:5px 11px;min-height:30px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);border-radius:var(--r-sm);cursor:pointer;white-space:nowrap}
 #tb-clients .voir:hover{border-color:var(--accent);color:var(--accent)}
@@ -893,7 +890,6 @@ main .tiles.tb-tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .fc-id-t{min-width:0;display:flex;flex-direction:column;gap:8px}
 .fc-pastilles{display:flex;flex-wrap:wrap;gap:6px}
 .fc-pastilles .pastille{padding:4px 12px;font-size:12.5px}
-.fc-role-p{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
 .fc-actions{display:flex;gap:10px;margin-top:14px}
 .fc-principal{flex:1;min-width:0}
 .fc-principal svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -926,14 +922,8 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 .fc-coche svg{width:16px;height:16px;fill:none;stroke:var(--good);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px}
 .fc-manque{color:var(--warn);font-size:12.5px;font-weight:600}
 .fc-sans{color:var(--ink-3);font-style:normal;font-weight:400}
-.fc-changer{font-size:13px;margin-left:4px}
 #fiche-tel .tel-coach{display:inline-flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:6px}
 .fc-outils .b-act,.bandeau .b-act{min-height:var(--h-toucher)}
-.fc-boutons{display:flex;flex-direction:column;gap:10px;margin:12px 0}
-.fc-large{width:100%}
-.fc-danger{margin-top:14px;padding:16px;border:1px solid rgba(248,113,113,.45);border-radius:var(--r-lg);background:rgba(248,113,113,.06)}
-.fc-danger h3{margin:0 0 4px;font-size:15px}
-.fc-danger .btn{margin-top:12px}
 
 /* --- créer un accès --- */
 .acces-vue .masthead{border-bottom:0;padding-top:6px}
@@ -943,7 +933,6 @@ ul.fc-lignes li > b{font-weight:500;text-align:right;min-width:0;overflow-wrap:a
 
 /* --- zones de toucher de 44 px (décision 8) sur les listes détaillées de l'espace coach --- */
 .client-l .voir,#tb-clients .voir{min-height:var(--h-toucher)}
-.bandeau .sortir{min-height:var(--h-toucher)}
 .fc-outils .bandeau{margin:16px 0 0}
 .lc-plus{list-style:none;display:flex;justify-content:center;margin-top:4px}
 
@@ -1047,7 +1036,6 @@ details.ex-pli > .ex-ligne{margin:0;border:0;border-top:1px solid var(--line);bo
 .f-onglet:hover{border-color:var(--accent);color:var(--ink)}
 .f-onglet.ici{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
 .fiche-wa:empty{display:none}
-a.btn.fiche-wa-l{min-height:var(--h-toucher)}
 @media (max-width:560px){ .f-onglet{padding:0 11px;font-size:13px} }
 @media (max-width:420px){ .fiche-onglets{gap:4px} .f-onglet{padding:0 9px;font-size:12.5px} }
 /* v101 (chantier 6 de la nuit du 10/11) : la croix des volets (« Tout mon espace ») visible et à 44 × 44 px, sans chevaucher le

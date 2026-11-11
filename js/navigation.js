@@ -566,7 +566,7 @@ const EnteteFiche = {
   infos: {},
   /* ce qui n'est pas une saisie du client (même liste que Clients.charger : ce que le coach écrit, et ce qui n'est pas une saisie) */
   PAS_SAISIE: ["programme", "repas", "calc", "complements", "feedbacks", "notes_coach", "suivi_prospect", "emails", "coach_notifs", "contact", "coach_visite", "activite", "hist_programme", "hist_repas", "brouillons_programme", "brouillons_repas", "atelier"],
-  oublier(uid){ if (uid) delete this.infos[uid]; },
+  oublier(uid){ if (uid){ delete this.infos[uid]; delete this.encours[uid]; } },
   prenom(nom){ const n = String(nom || "").trim(); return n === Clients.SANS_NOM ? n : (n.split(/\s+/)[0] || n); },
   html(){
     const uid = Store.idConsulte, nom = Store.nomConsulte || trad("ce client"), ret = trad(RETOURS[Store.retourVers] || RETOURS.clients);
@@ -578,12 +578,13 @@ const EnteteFiche = {
         <div class="fe-qui"><strong class="fe-nom" data-notr title="${esc(nom)}">${esc(this.prenom(nom))}</strong>
           <span class="fe-etat"><span data-fe-statut>${i ? this.statutHTML(i) : ""}</span><span class="fe-vu" data-fe-vu>${i ? this.vuHTML(i) : ""}</span></span></div>
         <div class="fe-actions">
-          <span class="fiche-wa" data-fiche-wa>${i ? this.waHTML(i) : ""}</span>
-          <span data-fiche-tel>${i ? this.telHTML(i) : ""}</span>
+          <span class="fiche-wa" data-fiche-wa>${this.waHTML(i)}</span>
+          <span data-fiche-tel>${this.telHTML(i)}</span>
           <button class="rond fe-notes" type="button" id="fe-notes" aria-label="${esc(trad("Notes privées"))}" title="${esc(trad("Notes privées"))}" aria-haspopup="dialog">${SVG.note}</button>
           ${menuPointsHTML([{ href: lienPageFiche("accueil/compte"), texte: "Son compte", attrs: 'data-fe-compte' }].concat(i ? this.actions(i) : []), { id: "fiche-points", libelle: "Actions du compte" })}
         </div>
       </div>
+      <p class="etat fe-temoin" data-etat-miroir role="status" aria-live="polite">${esc(($("etat") || {}).textContent || "")}</p>
       ${ongletsFicheHTML(ici)}
       ${pages.length > 1 ? `<nav class="sous-onglets bandeau-actions fiche-pages" aria-label="${esc(trad(g.nom))}">${pages.map(p => { const actif = pageFicheActive(p);
         return `<a href="${esc(lienPageFiche(p[0]))}" class="s-onglet b-act${actif ? " on ici" : ""}"${actif ? ' aria-current="page"' : ""}>${esc(trad(p[1]))}</a>`; }).join("")}</nav>` : ""}
@@ -593,7 +594,7 @@ const EnteteFiche = {
   /* « vu il y a X » : sa dernière connexion (table connexions) ; orange : un client sans saisie depuis 10 jours ou plus */
   vuTexte(cx){
     if (!cx || !cx.lue) return "";
-    if (!cx.derniere) return trad("jamais connecté");
+    if (!cx.derniere) return trad("aucune connexion notée");
     const m = Math.max(0, (Date.now() - Date.parse(cx.derniere)) / 60000);
     if (m < 60) return trad("vu il y a {n} min", { n: Math.max(1, Math.floor(m)) });
     if (m < 1440) return trad("vu il y a {n} h", { n: Math.floor(m / 60) });
@@ -605,12 +606,16 @@ const EnteteFiche = {
     if (!t && !aide) return "";
     return `<span class="fe-vu-t${this.inactif(i) ? " inactif" : ""}" title="${esc(aide)}">${esc(t || aide)}${this.inactif(i) ? `<span class="sr-only"> · ${esc(aide)}</span>` : ""}</span>`;
   },
+  /* i absent (lecture en cours) : les ronds grisés, pour que la ligne ne saute pas à l'arrivée des données */
   waHTML(i){
-    const l = Telephone.valide(i.tel) ? lienWaVers(i.tel, messageWhatsAppCoach(i.pr, i.I, i.anglais)) : "";
+    if (!i) return `<button type="button" class="rond fiche-wa-l" disabled aria-label="WhatsApp" title="WhatsApp">${SVG.whatsapp}</button>`;
+    let m = ""; try { m = messageWhatsAppCoach(i.pr, i.I, i.anglais); } catch(e){ m = ""; }
+    const l = Telephone.valide(i.tel) ? (lienWaVers(i.tel, m) || lienWaVers(i.tel, "")) : "";   // un message impossible à encoder : la conversation s'ouvre quand même
     return l ? `<a class="rond fiche-wa-l" href="${esc(l)}" target="_blank" rel="noopener" data-wa-coach aria-label="${esc(trad("WhatsApp : message prêt"))}" title="${esc(trad("WhatsApp : message prêt"))}">${SVG.whatsapp}</a>`
       : `<button type="button" class="rond fiche-wa-l" disabled aria-label="${esc(trad("WhatsApp : pas de numéro"))}" title="${esc(trad("Pas de numéro"))}">${SVG.whatsapp}</button>`;
   },
   telHTML(i){
+    if (!i) return `<button type="button" class="rond fc-appeler" disabled aria-label="${esc(trad("Appeler"))}" title="${esc(trad("Appeler"))}">${SVG.tel}</button>`;
     return Telephone.valide(i.tel) ? `<a class="rond fc-appeler" id="fc-appeler" href="tel:${esc(i.tel)}" aria-label="${esc(trad("Appeler"))}" title="${esc(trad("Appeler"))}">${SVG.tel}</a>`
       : `<button type="button" class="rond fc-appeler" id="fc-appeler" disabled aria-label="${esc(trad("Appeler : pas de numéro"))}" title="${esc(trad("Pas de numéro"))}">${SVG.tel}</button>`;
   },
@@ -624,8 +629,14 @@ const EnteteFiche = {
     ];
   },
   /* lu une fois par fiche : profil, numéro, réponses (message prêt), langue, archivage, connexions, dernière saisie */
-  async lire(uid){
-    if (this.infos[uid]) return this.infos[uid];
+  encours: {},
+  lire(uid){
+    if (this.infos[uid]) return Promise.resolve(this.infos[uid]);
+    /* deux pages ouvertes avant la fin de la lecture : une seule lecture */
+    if (!this.encours[uid]) this.encours[uid] = this.lecture(uid).finally(() => { delete this.encours[uid]; });
+    return this.encours[uid];
+  },
+  async lecture(uid){
     const q = "/rest/v1/donnees?user_id=eq." + uid;
     const [pr, cx, lignes, dates] = await Promise.all([
       Auth.appel("/rest/v1/profils?id=eq." + uid + "&select=*").then(r => Array.isArray(r) ? r[0] || null : null),
@@ -667,7 +678,14 @@ const EnteteFiche = {
     const pFiche = i.pr;
     /* après une action : la fiche est relue (son en-tête aussi), ou quittée si le compte n'en a plus (supprimé, ou passé en accès
        complet) — comme avant dans l'onglet Compte */
-    const refaire = () => { this.oublier(uid); if (Store.idConsulte === uid) afficher(courant, true, true); };
+    /* sur l'Aperçu, la page est relue (comme avant dans l'onglet Compte) ; ailleurs (Programme en cours d'édition…), seul
+       l'en-tête est relu */
+    const refaire = () => {
+      this.oublier(uid); if (Store.idConsulte !== uid) return;
+      if (courant === "accueil") { afficher(courant, true, true); return; }
+      const z0 = $("fiche-entete"); if (z0){ const t = document.createElement("div"); t.innerHTML = this.html(); z0.replaceWith(t.firstElementChild); }
+      this.remplir(uid);
+    };
     const quitter = vers => { this.oublier(uid); ListeCoach.revenir(vers); if (Store.idConsulte === uid){ Store.oublier(uid); Store.idConsulte = null; Store.nomConsulte = null; } Store.retourVers = null; location.hash = "#/" + vers; };
     const sur = (id, f) => { const b = z.querySelector("#" + id); if (b) b.addEventListener("click", () => f(b)); };
     sur("fc-changer", async b => { if (await Acces.changerStatut(pFiche, b.dataset.statut, b)) refaire(); });
@@ -696,6 +714,9 @@ const EnteteFiche = {
   }
 };
 document.addEventListener("click", e => { const b = e.target && e.target.closest ? e.target.closest("#fe-notes") : null; if (b) EnteteFiche.notes(); });
+/* v106 (lot 2, relecture) : en descendant dans la page, la rangée des pages de l'onglet se replie (l'en-tête collé garde la ligne et
+   les onglets) ; elle revient en haut de page */
+window.addEventListener("scroll", () => { const z = document.getElementById("fiche-entete"); if (z) z.classList.toggle("fe-reduit", window.scrollY > 160); }, { passive: true });
 /* L'en-tête de chaque page de la fiche (v106 : EnteteFiche) */
 function bandeauConsultation(){
   if (!Store.idConsulte) return "";

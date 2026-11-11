@@ -259,7 +259,6 @@ footer a{color:var(--accent)}
 .bandeau.session-perdue span{flex:1 1 260px;min-width:0}
 @media (min-width:900px){.bandeau.session-perdue{left:auto;right:24px;bottom:24px;max-width:520px}}
 .bandeau strong{font-size:15px}
-.bandeau .sortir{margin-left:auto;background:var(--accent);color:var(--accent-ink);border:0;border-radius:var(--r-sm);padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;min-height:36px}
 .lecture-seule .panel input,.lecture-seule .panel select,.lecture-seule .panel textarea,
 .lecture-seule .panel button:not([data-lecture-ok]),.lecture-seule .panel a.btn{pointer-events:none;opacity:.7}
 /* v71 (C) : data-lecture-ok = commande d'affichage pur (chips des courbes, « Afficher les séances plus anciennes »,
@@ -738,9 +737,9 @@ body.nav106 .compte .qui,body.nav106 #langue,body.nav106 #deco{display:none}
 .fe-retour svg,.fe-actions .rond svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .fe-qui{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:center;line-height:1.15;padding-left:4px}
 .fe-nom{font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fe-etat{display:flex;align-items:center;gap:6px;min-width:0;font-size:12.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden}
+.fe-etat{display:flex;align-items:center;flex-wrap:wrap;gap:0 6px;min-width:0;font-size:12.5px;line-height:1.3;color:var(--ink-3);white-space:nowrap}   /* « vu il y a X » jamais coupé : il passe sous le statut s'il le faut */
 .fe-etat .pastille{font-size:11px;padding:0 7px;line-height:1.5}
-.fe-vu-t{overflow:hidden;text-overflow:ellipsis}
+.fe-vu{flex:none}
 .fe-vu-t.inactif{color:var(--warn);font-weight:600}
 .fe-actions{display:flex;align-items:center;gap:6px;flex:none}
 .fe-actions .rond[disabled]{opacity:.4}
@@ -749,13 +748,20 @@ body.nav106 .compte .qui,body.nav106 #langue,body.nav106 #deco{display:none}
 #vue > .fiche-entete .f-onglet{justify-content:center;min-height:var(--h-toucher);padding:0 6px;border:0;border-radius:calc(var(--r-sm) - 2px);font-size:14px;color:var(--ink-2);background:none}
 #vue > .fiche-entete .f-onglet:hover{color:var(--ink)}
 #vue > .fiche-entete .f-onglet.ici{background:var(--accent);color:var(--accent-ink)}
-#vue > .fiche-entete .fiche-pages{margin:0;gap:4px;padding:0}
+#vue > .fiche-entete .fiche-pages{margin:0;gap:4px;padding:0;flex-wrap:nowrap;overflow-x:auto}
+#vue > .fiche-entete.fe-reduit .fiche-pages{display:none}   /* en descendant : la ligne et les onglets restent, les pages reviennent en haut */
+/* la copie du témoin d'enregistrement (téléphone et tablette, où la barre du haut est cachée dans une fiche) */
+.fe-temoin{margin:0;font-size:12px}
+.fe-temoin:empty,.fe-temoin.enregistre:empty{display:none}
+@media (min-width:1024px){ .fe-temoin{display:none} }
 #vue > .fiche-entete .fiche-pages .b-act{min-height:var(--h-toucher);border:1px solid transparent;background:none;color:var(--ink-2);font-size:13.5px;padding:0 12px;border-radius:999px}
 #vue > .fiche-entete .fiche-pages .b-act.ici{background:var(--verre-choisi);border-color:var(--verre-bord);color:var(--ink);font-weight:600}
 #vue > .fiche-entete .menu-points-l{min-width:230px}
 .volet-notes .notes-coach{border:0;background:none;padding:0;box-shadow:none}
 .volet-notes .notes-coach .seance-c-tete h2{display:none}
 .volet-notes #nc-texte{min-height:46vh}
+/* un élément amené à l'écran par la page (scrollIntoView) ne finit pas sous l'en-tête collé */
+html:has(body.en-fiche){scroll-padding-top:190px}
 /* téléphone et tablette : l'en-tête de la fiche remplace la barre du haut */
 @media (max-width:1023px){
   body.nav106.en-fiche .topbar{display:none}
@@ -763,3 +769,4 @@ body.nav106 .compte .qui,body.nav106 #langue,body.nav106 #deco{display:none}
 }
 #vue > .fiche-entete .fe-actions .rond,#vue > .fiche-entete .fe-retour{width:var(--h-rond);height:var(--h-rond);min-width:0}
 @media (max-width:420px){ .fe-ligne,.fe-actions{gap:4px} }   /* les boutons gardent 44 px */
+@media (max-width:380px){ #vue > .fiche-entete .f-onglet{font-size:13px;padding:0 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .fe-nom{font-size:16px} }

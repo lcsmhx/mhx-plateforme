@@ -565,7 +565,7 @@ const avecPrefsEnTous = db => { [F.IDS.coach, C1, C2, F.IDS.c3].forEach(id => { 
          « vu il y a », WhatsApp, Appeler, Notes, « ⋯ »), puis les 4 onglets, puis la rangée des pages ; plus de phrase d'aide ni
          de titre de page répété (un h1 pour les lecteurs d'écran, au nom de la page ouverte) */
       ok("A1 (" + qui + ") : Programme (référence) : l'en-tête .fiche-entete en premier dans #vue (ligne : retour « Revenir à mes clients » en tête, prénom — nom entier en bulle —, puis les 4 onglets et les pages) ; aucun titre de page visible, h1 « Son programme » pour les lecteurs d'écran",
-        ref.nbBandeaux === 1 && ref.premier && JSON.stringify(ref.enfants) === '["DIV.fe-ligne","NAV.fiche-onglets","NAV.sous-onglets bandeau-actions fiche-pages"]' && ref.tete === nom && ref.prenom === nom.split(" ")[0]
+        ref.nbBandeaux === 1 && ref.premier && JSON.stringify(ref.enfants) === '["DIV.fe-ligne","P.etat fe-temoin","NAV.fiche-onglets","NAV.sous-onglets bandeau-actions fiche-pages"]' /* + la copie du témoin d'enregistrement (vide, cachée) */ && ref.tete === nom && ref.prenom === nom.split(" ")[0]
           && ref.nbOnglets === 1 && JSON.stringify(ref.onglets) === '["Aperçu","Programme","Nutrition","Suivi"]' && ref.sortir === 1 && ref.sortirFin && ref.sortirTexte === "Revenir à mes clients"
           && ref.titre === null && ref.h1Visibles === 0 && ref.srH1 === "Son programme" && ref.pageIci === "Son programme", JSON.stringify(ref));
       for (const [ch, ong] of PAGES) {

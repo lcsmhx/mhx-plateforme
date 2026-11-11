@@ -23,7 +23,7 @@ async function routeDepuisAdresse(){
         try { const r = await Auth.appel("/rest/v1/profils?id=eq." + uid + "&select=*"); pr = (r && r[0]) || null; } catch(e){}
         if (mien !== routage || $("session-perdue")) return;
         if (!pr || pr.role === "coach"){ parts = ["clients"]; reecrire = true; }
-        else { Store.oublier(Store.idConsulte); Store.idConsulte = uid; Store.nomConsulte = Clients.nom(pr); Store.retourVers = Store.retourVers || "clients"; }
+        else { Store.oublier(Store.idConsulte); if (typeof EnteteFiche !== "undefined") EnteteFiche.oublier(uid); Store.idConsulte = uid; Store.nomConsulte = Clients.nom(pr); Store.retourVers = Store.retourVers || "clients"; }
       }
       if (parts[0] === "client") parts = parts.length > 2 ? parts.slice(2) : ["accueil"];
     }

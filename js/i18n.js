@@ -1318,7 +1318,7 @@ Object.assign(I18N.en, {
   "{n} jours actifs sur 30": "{n} active days out of 30",
   "Rempli": "Completed", "à remplir": "to fill in", "envoyé": "sent", "envoyée": "sent", "à faire": "to do", "à définir": "to set", "Diète": "Meal plan",
   "Tu vois ses données. Tu écris pour lui dans les boutons dorés, dans « Préparer le call » (ton feedback) et dans la fiche (tes notes privées, qu'il ne voit jamais).": "You're seeing their data. You write for them with the gold buttons, in “Prepare the call” (your feedback), and on the profile (your private notes, which they never see).",
-  "Téléphone": "Phone", "Rôle": "Role", "Changer": "Change", "Dernière connexion": "Last login", "Connexions": "Logins",
+  "Téléphone": "Phone", "Rôle": "Role", "Dernière connexion": "Last login", "Connexions": "Logins",
   "Donner l'accès complet": "Give full access",
   "Efface le compte et toutes ses données : c'est ce qu'il faut faire quand une personne demande l'effacement de ses données. C'est définitif : il n'y a pas de corbeille.": "Erases the account and all its data: this is what to do when someone asks for their data to be deleted. It's permanent: there's no trash.",
   "La personne recevra ces identifiants. Elle pourra changer son mot de passe et son adresse elle-même, depuis son profil. Personne ne peut créer de compte sans passer par toi.": "The person will receive these login details. They can change their password and email address themselves, from their profile. No one can create an account without going through you.",
@@ -1752,8 +1752,6 @@ Object.assign(I18N.en, {
   "Suppression incomplète.": "Deletion incomplete."
 });
 /* v104-supprimer-acces-fin */
-/* v104 (point 4) : fiche d'un prospect, le bouton du message WhatsApp pré-rempli (le WhatsApp du bandeau ouvre une conversation vide) */
-Object.assign(I18N.en, { });
 /* v104 (partie 2, points 1 à 5) : fiche d'un client côté coach */
 Object.assign(I18N.en, {
   "semaine passée": "last week",
@@ -1873,7 +1871,7 @@ Object.assign(I18N.en, {
 });
 /* v106 (lot 2) : l'en-tête de la fiche (EnteteFiche) */
 Object.assign(I18N.en, {
-  "Actions du compte": "Account actions", "Notes privées": "Private notes", "jamais connecté": "never signed in",
+  "Actions du compte": "Account actions", "Notes privées": "Private notes", "aucune connexion notée": "no login recorded",
   "vu il y a {n} min": "seen {n} min ago", "vu il y a {n} h": "seen {n} h ago", "vu il y a {n} j": "seen {n} d ago",
   "WhatsApp : message prêt": "WhatsApp: ready-made message", "WhatsApp : pas de numéro": "WhatsApp: no number",
   "Passer client": "Make client", "Repasser prospect": "Back to prospect", "Prospect": "Prospect", "Client": "Client",

@@ -1734,7 +1734,14 @@ function majEtat(etat){
                      refuse:"Non enregistré — modification refusée", perdu:"Hors ligne — modification non enregistrée" };
   e.textContent = libelles[etat] || "";
   e.className = "etat " + etat;
-  if (etat === "enregistre") setTimeout(() => { if (e.className.indexOf("enregistre") > -1) e.textContent = ""; }, 2000);
+  if (etat === "enregistre") setTimeout(() => { if (e.className.indexOf("enregistre") > -1) e.textContent = ""; miroirEtat(); }, 2000);
+  miroirEtat();
+}
+/* v106 (lot 2, relecture) : sur téléphone et tablette, dans une fiche, l'en-tête de la fiche remplace la barre du haut : il porte une
+   copie du témoin d'enregistrement ([data-etat-miroir], navigation.js), tenue à jour ici */
+function miroirEtat(){
+  const e = document.getElementById("etat"); if (!e) return;
+  document.querySelectorAll("[data-etat-miroir]").forEach(m => { m.textContent = e.textContent; m.className = e.className + " fe-temoin"; });
 }
 
 /* --- Bloc de sauvegarde, identique en bas de chaque outil --- */
