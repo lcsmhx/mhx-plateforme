@@ -522,7 +522,7 @@ function bandeauConsultation(tout){
     <span class="fiche-wa" data-fiche-wa>${TelFiche.html(Store.idConsulte)}</span>
     ${ongletsFicheHTML(ici)}
     <div class="bandeau-actions">
-      ${pages.length ? pages.map(p => { const actif = p[0] === courant || (p[0] === "accueil/compte" && courant === "accueil" && sousRoute === "compte");
+      ${pages.length > 1 ? pages.map(p => {   /* v105 (point 2) : une page seule (Aperçu : « Fiche ») n'a plus son bouton */ const actif = p[0] === courant || (p[0] === "accueil/compte" && courant === "accueil" && sousRoute === "compte");
         return `<a href="${esc(lienPageFiche(p[0]))}" class="b-act${p[2] ? " fort" : ""}${actif ? " ici" : ""}"${actif ? ' aria-current="page"' : ""}>${esc(trad(p[1]))}</a>`; }).join("") : ""}
       ${sortir}
     </div>

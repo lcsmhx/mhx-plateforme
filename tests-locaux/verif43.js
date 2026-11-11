@@ -156,8 +156,8 @@ const flagsDe = (page) => page.$$eval("#alertes-clients .flag", l => l.map(x => 
     /* --- fiche du compte sans nom, ouverte depuis Mes clients --- */
     await page.evaluate(() => { location.hash = "#/suivi-clients"; }); await page.waitForSelector(`[data-ouvrir="${N1}"]`).catch(() => {});   // v84 (ménage du bloc 3) : le tableau (et son [data-ouvrir]) est dans « Suivi détaillé »
     E.ici = "fiche"; await page.click(`[data-ouvrir="${N1}"]`); await attendre(page, 2000);
-    const h1 = await texte(page, "#acc-vue .fc-ident h2");   // v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » (h2 de #fc-ident)
-    ok("fiche : le titre est « Sans nom »", h1.startsWith("Sans nom"), h1);
+    const h1 = await texte(page, "#vue > .fiche-entete .bandeau-tete strong");   // v105 (point 2) : le nom n'est plus que dans le bandeau (plus de h2 dans #fc-ident)
+    ok("fiche : le titre est « Sans nom », une seule fois (v105)", h1 === "Fiche — Sans nom" && !(await page.$("#acc-vue .fc-ident h2")), h1);
     const bandeau = await texte(page, ".bandeau-tete strong");
     ok("fiche : le bandeau dit « Fiche — Sans nom » (ni « ce client », ni l'identifiant)", bandeau === "Fiche — Sans nom", bandeau);
     const fiche = await texte(page, "#vue");

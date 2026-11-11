@@ -36,7 +36,7 @@ const server = http.createServer((req,res)=>{if(servirFichier(req,res,HTML))retu
   await page.evaluate(id=>Clients.ouvrir(id, "Sarah Démo", "programme"), F.IDS.c2); await page.waitForTimeout(1200);
   await page.evaluate(()=>{location.hash="#/accueil"}); await page.waitForTimeout(1500);
   const f = await page.textContent("#acc-vue");
-  const h1 = await page.textContent("#acc-vue .fc-ident h2"); /* v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » (h2 de #fc-ident) */ ok("fiche : en-tete au nom du client ouvert", /Sarah|Julien|Thomas/.test(h1), h1);
+  const h1 = await page.textContent("#vue > .fiche-entete .bandeau-tete strong"); /* v105 (point 2) : le nom n'est plus que dans le bandeau « Fiche de … » */ ok("fiche : en-tete au nom du client ouvert", /Sarah|Julien|Thomas/.test(h1), h1);
   ok("fiche : blocs profil / objectifs / programme / nutrition / poids / bilan / reste", ["Profil","Objectifs du mois","Programme","Nutrition","Poids et mensurations","Bilan hebdomadaire","Le reste"].every(x=>f.includes(x)));
   ok("fiche : questionnaire complet et programme a faire (Sarah)", f.includes("questionnaire complet") && f.includes("à faire"));
   /* fiche de Thomas : alertes + bilan recu */
