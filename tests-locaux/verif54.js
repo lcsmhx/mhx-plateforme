@@ -204,6 +204,10 @@ const badge = page => page.$$eval('#nav a[data-id="prospects"] .nav-badge, #barr
 /* v83 (bloc 3) : l'onglet Prospects est dans #nav ET dans #barre-bas : le badge des Nouveautés existe en double (une seule
    copie visible selon la largeur) ; « badge N » = les DEUX copies affichent N */
 const badge2 = n => JSON.stringify([n, n]);
+/* v105 : le badge de l'onglet Prospects = les urgences prospects du tableau de bord (vérifié en détail par verif105) : l'attendu
+   est recalculé ici avec la même règle, sur la page Prospects */
+const urgN = page => page.evaluate(() => (outilProspects.lignes || []).filter(l => l && l.p && l.p.statut === "prospect" && !l.archive).filter(l => outilTableau.urgentProspect(Commercial.analyseLigne(l))).length).catch(() => -1);
+const badgeU = async page => { const u = await urgN(page); return u > 0 ? badge2(u > 99 ? "99+" : String(u)) : "[]"; };
 const ecr = (db, outil, uid) => db.ecritures.filter(e => e.outil === outil && (!uid || e.user_id === uid));
 const contenu = (db, outil, uid) => (db.donnees.find(x => x.user_id === uid && x.outil === outil) || {}).contenu;
 const couvre = (o, k) => {
@@ -413,7 +417,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const { page } = await contexte(b, coach, db, { horloge: true });
     await page.goto(URL0 + "#/prospects"); await page.waitForSelector("#pr-nouveautes [data-nv-vu]", { timeout: 8000 }); await attendre(page, 500);
     const tCharge = await page.evaluate(() => Date.now());
-    ok("page Prospects chargée (vu il y a 3 h) : 2 nouveautés, badge « 2 »", (await texte(page, "#pr-nouveautes .seance-c-tete .pastille")) === "2" && JSON.stringify(await badge(page)) === badge2("2") /* v83 (bloc 3) : badge en double */, JSON.stringify(await badge(page)));
+    ok("page Prospects chargée (vu il y a 3 h) : 2 nouveautés ; badge = urgences (v105)", (await texte(page, "#pr-nouveautes .seance-c-tete .pastille")) === "2" && JSON.stringify(await badge(page)) === await badgeU(page), JSON.stringify(await badge(page)));
     await page.clock.fastForward(12 * MIN);
     /* un autre appareil du coach marque tout comme vu 10 minutes après ce chargement */
     const vuAutre = new Date(tCharge + 10 * MIN).toISOString();
@@ -423,7 +427,7 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     const N = contenu(db, "coach_notifs", F.IDS.coach) || {}, E = ecr(db, "coach_notifs");
     ok("« Tout marquer comme vu » sur la page chargée 12 min plus tôt : relu d'abord, puis une écriture, vu ≥ la date de l'autre appareil (" + hm(vuAutre) + ") — jamais l'instant du chargement (" + hm(tCharge) + ")", luDirect(db, "coach_notifs") === n0 + 1 && E.length === 1 && typeof N.vu === "string" && Date.parse(N.vu) >= Date.parse(vuAutre) && db.journal.lastIndexOf("L coach_notifs") < db.journal.indexOf("E coach_notifs"), JSON.stringify(N) + " · autre appareil " + vuAutre + " · chargement " + new Date(tCharge).toISOString());
     const pan = await texte(page, "#pr-nouveautes");
-    ok("… panneau « Rien de nouveau … depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ") », badge retiré", pan.includes("Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ").") && (await badge(page)).length === 0, pan.slice(0, 200));
+    ok("… panneau « Rien de nouveau … depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ") », badge des urgences inchangé (v105)", pan.includes("Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ").") && JSON.stringify(await badge(page)) === await badgeU(page), pan.slice(0, 200));
     ok("seule écriture : coach_notifs", db.ecritures.length === 1, JSON.stringify(db.ecritures.map(e => e.outil || e.table)));
   });
 
@@ -446,9 +450,9 @@ const complet = o => Object.assign({ sexe: "Homme", age: "35", taille: "178", po
     ok("vu écrit = l'instant du chargement de la page (" + hm(tCharge) + "), pas celui du clic (" + hm(tClic) + ") : avant l'inscription de Zoé (" + hm(creeNouveau) + ")", ecr(db, "coach_notifs").length === 1 && typeof N.vu === "string" && Date.parse(N.vu) >= tAvant - 1000 && Date.parse(N.vu) <= tCharge && Date.parse(N.vu) < Date.parse(creeNouveau), JSON.stringify(N) + " · chargement " + new Date(tCharge).toISOString() + " · clic " + new Date(tClic).toISOString());
     await aller(page, "#/tableau", 1500); await aller(page, "#/prospects", 2400); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 });
     const vis = await nvVisibles(page, "#pr-nouveautes");
-    ok("visite suivante (page Prospects) : Zoé, inscrite entre l'affichage et le clic, est toujours une nouveauté (et elle seule), badge « 1 »", JSON.stringify(vis) === JSON.stringify(["Zoé Entre-deux · inscription"]) && JSON.stringify(await badge(page)) === badge2("1") /* v83 (bloc 3) : badge en double */ && (await texte(page, "#pr-nouveautes")).includes("Depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ")"), JSON.stringify(vis) + " · " + JSON.stringify(await badge(page)) + " · " + (await texte(page, "#pr-nouveautes")).slice(0, 160));
+    ok("visite suivante (page Prospects) : Zoé, inscrite entre l'affichage et le clic, est toujours une nouveauté (et elle seule) ; badge = urgences (v105)", JSON.stringify(vis) === JSON.stringify(["Zoé Entre-deux · inscription"]) && JSON.stringify(await badge(page)) === await badgeU(page) && (await texte(page, "#pr-nouveautes")).includes("Depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ")"), JSON.stringify(vis) + " · " + JSON.stringify(await badge(page)) + " · " + (await texte(page, "#pr-nouveautes")).slice(0, 160));
     await page.goto(URL0 + "#/prospects"); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 500);
-    ok("vrai rechargement (page Prospects) : Zoé toujours en nouveauté, badge « 1 »", JSON.stringify(await nvVisibles(page, "#pr-nouveautes")) === JSON.stringify(["Zoé Entre-deux · inscription"]) && JSON.stringify(await badge(page)) === badge2("1") /* v83 (bloc 3) : badge en double */, JSON.stringify(await nvVisibles(page, "#pr-nouveautes")));
+    ok("vrai rechargement (page Prospects) : Zoé toujours en nouveauté ; badge = urgences (v105)", JSON.stringify(await nvVisibles(page, "#pr-nouveautes")) === JSON.stringify(["Zoé Entre-deux · inscription"]) && JSON.stringify(await badge(page)) === await badgeU(page), JSON.stringify(await nvVisibles(page, "#pr-nouveautes")));
     ok("seule écriture : coach_notifs (une fois)", db.ecritures.length === 1 && ecr(db, "coach_notifs").length === 1, JSON.stringify(db.ecritures.map(e => e.outil || e.table)));
   });
 

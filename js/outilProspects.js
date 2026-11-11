@@ -66,7 +66,7 @@ const outilProspects = {
     this.preparer();
     zone.innerHTML = `<div id="lc-zone"></div><div id="pr-nouveautes"></div>`;
     ListeCoach.monter(zone.querySelector("#lc-zone"), "prospects", this.lignesListe(), { recharger: async () => { if (zone.isConnected) await this.monter(true, "liste"); } });   // v83 (bloc 3)
-    if (typeof Nouveautes !== "undefined") Nouveautes.monter(zone.querySelector("#pr-nouveautes"), this.lignes, true, this.tCharge);
+    if (typeof Nouveautes !== "undefined"){ Nouveautes.urgences(this.lignes); Nouveautes.monter(zone.querySelector("#pr-nouveautes"), this.lignes, true, this.tCharge); }   // v105 : le badge = les urgences
   },
   /* chaque prospect : sa ligne (Clients.resumer) et son analyse (issue, prochaine action, à traiter) */
   preparer(){

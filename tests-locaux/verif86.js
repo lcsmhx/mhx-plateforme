@@ -464,8 +464,8 @@ const PLUSIEURS = "Ces comptes disparaissent de tes listes. Tu les retrouves dan
       t.sur === "À traiter maintenant" && t.lignes[0] === THOMAS && t.lignes.length === 4 && JSON.stringify(t.lignes.slice(1, 4).sort()) === JSON.stringify([ZOE, LEO, NOE].sort())
         && t.titreSurv === "À surveiller" && JSON.stringify(t.surveiller) === JSON.stringify([[JULIEN, "Inactif depuis 12 j"]])
         && t.raisons[0] === "Bilan hebdo reçu — à lire" && ![...t.lignes, ...t.surveiller.map(x => x[0])].includes(PAUL) && ![...t.lignes, ...t.surveiller.map(x => x[0])].includes(INES), JSON.stringify(t));
-    ok("D3 : dessous, tout le reste d'avant : « Nouveaux depuis ta dernière visite » (Zoé, Noé, Leo, Hugo ; pas Inès, archivée), « Inscrits par source », raccourcis (Mes clients, Mes séances, Bibliothèque, Catalogue) ; badge des Nouveautés sans l'archivée",
-      t.ordre && JSON.stringify(t.nouveaux) === '["Zoé","Noé","Leo","Hugo"]' && JSON.stringify(t.raccourcis) === '["Mes clients","Mes séances","Bibliothèque","Catalogue"]' && t.badge === "8", JSON.stringify(t));
+    ok("D3 : dessous, tout le reste d'avant : « Nouveaux depuis ta dernière visite » (Zoé, Noé, Leo, Hugo ; pas Inès, archivée), « Inscrits par source », raccourcis (Mes clients, Mes séances, Bibliothèque, Catalogue) ; badge de l'onglet Prospects = les 3 urgences (Zoé, Noé, Leo ; v105 : plus les nouveautés), sans l'archivée",
+      t.ordre && JSON.stringify(t.nouveaux) === '["Zoé","Noé","Leo","Hugo"]' && JSON.stringify(t.raccourcis) === '["Mes clients","Mes séances","Bibliothèque","Catalogue"]' && t.badge === "3", JSON.stringify(t));
     const nav = await page.evaluate(() => Array.from(document.querySelectorAll("#barre-bas a, #barre-bas button")).map(x => x.textContent.trim()));
     await page.click("#barre-bas [data-plus]"); await attendre(page, 400);
     const plus = await page.$$eval(".menu-plus a", l => l.map(a => a.dataset.id));

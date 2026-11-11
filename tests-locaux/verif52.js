@@ -327,6 +327,11 @@ const badge = page => page.$$eval('#nav a[data-id="prospects"] .nav-badge, #barr
 /* v83 (bloc 3) : l'onglet Prospects est dans la barre du haut (#nav) ET dans la barre du bas (#barre-bas) : le badge des
    Nouveautés existe en double (une seule copie visible selon la largeur) ; « badge N » = les DEUX copies affichent N */
 const badge2 = n => JSON.stringify([n, n]);
+/* v105 : le badge de l'onglet Prospects = les urgences prospects du tableau de bord (vérifié en détail par verif105) : l'attendu
+   est recalculé ici avec la même règle (page Prospects ou Suivi commercial), ou lu sur la tuile Prospects (tableau de bord) */
+const urgN = page => page.evaluate(() => (outilProspects.lignes || []).filter(l => l && l.p && l.p.statut === "prospect" && !l.archive).filter(l => outilTableau.urgentProspect(Commercial.analyseLigne(l))).length).catch(() => -1);
+const badgeU = async page => { const u = await urgN(page); return u > 0 ? badge2(u > 99 ? "99+" : String(u)) : "[]"; };
+const tuileU = page => page.$eval("#tb-t-prospects .tb-badge", e => parseInt(e.textContent, 10)).catch(() => -1);
 const ecr = (db, outil, uid) => db.ecritures.filter(e => e.outil === outil && (!uid || e.user_id === uid));
 const contenu = (db, outil, uid) => (db.donnees.find(x => x.user_id === uid && x.outil === outil) || {}).contenu;
 /* la clé k fait-elle partie de ce qu'une lecture de « donnees » renvoie ? filtre outil = eq.k, in.(…,k,…),
@@ -600,24 +605,24 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const attL = ["Léa Martin · inscription", "Émilie Rousseau · clic « Réserver mon plan d'action »", "Inès Dupré · a coché « J'ai réservé »", "Inès Dupré · clic « Réserver mon plan d'action »", "Inès Dupré · questionnaire rempli", "Inès Dupré · inscription", "Émilie Rousseau · clic « Réserver mon plan d'action »", "Émilie Rousseau · questionnaire rempli"];
     ok("liste : les 8 plus récentes, de la plus récente à la plus ancienne, puis « Voir les 3 suivantes » (les autres repliées)", JSON.stringify(li) === JSON.stringify(attL) && (await texte(page, "#pr-nouveautes [data-nv-plus]")) === "Voir les 3 suivantes", JSON.stringify(li) + " · " + (await texte(page, "#pr-nouveautes [data-nv-plus]")));
     ok("7 jours : Karim (8 jours) et Paul (10 jours) absents, le client Julien (inscrit il y a 3 h) jamais compté", !pan.includes("Karim") && !pan.includes("Paul") && !pan.includes("Julien"));
-    ok("badge « 11 » sur l'onglet Prospects", JSON.stringify(await badge(page)) === badge2("11") /* v83 (bloc 3) : badge en double */, JSON.stringify(await badge(page)));
+    ok("badge de l'onglet Prospects = ses urgences (v105 ; avant : les 11 nouveautés)", JSON.stringify(await badge(page)) === await badgeU(page) && (await urgN(page)) > 0, JSON.stringify(await badge(page)));
     /* v53 (chantier 4) : « Prospects à traiter » du tableau de bord (carte d'Inès avec son score) retiré (1) */
     ok("affichage : aucune écriture (coach_notifs pas écrit tant qu'on ne clique pas)", db.ecritures.length === 0, JSON.stringify(db.ecritures));
     const t0 = Date.now();
     await page.click("#pr-nouveautes [data-nv-vu]"); await attendre(page, 1600);
     const N = contenu(db, "coach_notifs", F.IDS.coach) || {};
     ok("« Tout marquer comme vu » : clé du coach coach_notifs = { vu : maintenant } (une écriture)", ecr(db, "coach_notifs", F.IDS.coach).length === 1 && typeof N.vu === "string" && Math.abs(Date.parse(N.vu) - t0) < 10000 && db.ecritures.length === 1, JSON.stringify(N));
-    ok("… panneau « Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + "). », badge disparu", (await texte(page, "#pr-nouveautes")).includes("Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ").") && (await badge(page)).length === 0, (await texte(page, "#pr-nouveautes")) + " · " + JSON.stringify(await badge(page)));
+    ok("… panneau « Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + "). », badge des urgences inchangé (v105)", (await texte(page, "#pr-nouveautes")).includes("Rien de nouveau chez tes prospects depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ").") && JSON.stringify(await badge(page)) === await badgeU(page), (await texte(page, "#pr-nouveautes")) + " · " + JSON.stringify(await badge(page)));
     await aller(page, "#/tableau", 2200);
-    ok("tableau de bord ensuite : toujours pas de badge (le compte des Nouveautés relu, sans panneau)", !!(await page.$("#tb-vue .tb-tiles")) && (await badge(page)).length === 0, JSON.stringify(await badge(page)));
+    ok("tableau de bord ensuite : badge = les urgences de la tuile Prospects (v105)", !!(await page.$("#tb-vue .tb-tiles")) && (await tuileU(page)) > 0 && JSON.stringify(await badge(page)) === badge2(String(await tuileU(page))), JSON.stringify(await badge(page)));
     /* un nouveau prospect s'inscrit après la visite */
     await attendre(page, 1100);
     db.profils.push({ id: NINA, prenom: "Nina", nom: "Nouvelle", role: "client", statut: "prospect", cree_le: new Date().toISOString() });
     await aller(page, "#/prospects", 2400);
     const li2 = await page.$$eval("#pr-nouveautes .nv-liste li .nv-txt", l => l.map(e => e.textContent.replace(/\s+/g, " ").trim())).catch(() => []);
-    ok("nouvelle inscription après la visite : « Depuis ta dernière visite (…) : », 1 nouveauté « Nina Nouvelle · inscription », badge « 1 »", JSON.stringify(li2) === '["Nina Nouvelle · inscription"]' && (await texte(page, "#pr-nouveautes")).includes("Depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ") :") && JSON.stringify(await badge(page)) === badge2("1") /* v83 (bloc 3) : badge en double */, JSON.stringify(li2) + " · " + JSON.stringify(await badge(page)));
+    ok("nouvelle inscription après la visite : « Depuis ta dernière visite (…) : », 1 nouveauté « Nina Nouvelle · inscription », badge = urgences (v105)", JSON.stringify(li2) === '["Nina Nouvelle · inscription"]' && (await texte(page, "#pr-nouveautes")).includes("Depuis ta dernière visite (" + fr(N.vu || 0) + " " + hm(N.vu || 0) + ") :") && JSON.stringify(await badge(page)) === await badgeU(page), JSON.stringify(li2) + " · " + JSON.stringify(await badge(page)));
     await page.reload(); await attendre(page, 2600);
-    ok("après rechargement (coach_notifs relu en base) : toujours 1 nouveauté, badge « 1 »", (await page.$$("#pr-nouveautes .nv-liste li")).length === 1 && JSON.stringify(await badge(page)) === badge2("1") /* v83 (bloc 3) : badge en double */, JSON.stringify(await badge(page)));
+    ok("après rechargement (coach_notifs relu en base) : toujours 1 nouveauté, badge = urgences (v105)", (await page.$$("#pr-nouveautes .nv-liste li")).length === 1 && JSON.stringify(await badge(page)) === await badgeU(page), JSON.stringify(await badge(page)));
     await page.click(`#pr-nouveautes [data-nv-ouvrir="${NINA}"]`); await attendre(page, 2400);
     ok("« Ouvrir » dans les Nouveautés : la fiche de Nina s'ouvre", (await texte(page, "#vue .fc-ident h2" /* v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » */)).startsWith("Nina Nouvelle") && !!(await page.$("#fiche-reponses")), await texte(page, "#vue .fc-ident h2" /* v104 (point 4) : changement voulu — le nom est sous le titre de page « Fiche » */));
     ok("Nouveautés : une seule écriture en tout (coach_notifs), aucune injection", db.ecritures.length === 1 && !(await xss(page)), JSON.stringify(db.ecritures.map(e => e.outil)));
@@ -628,7 +633,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const { page } = await contexte(b, coach, db);
     await page.goto(`http://localhost:${PORT}/#/prospects`); await page.waitForSelector("#pr-nouveautes .nv-panneau", { timeout: 8000 }); await attendre(page, 500);
     const types = await page.$$eval("#pr-nouveautes .nv-types .pastille", l => l.map(e => e.textContent.trim())).catch(() => []);
-    ok("coach_notifs.vu il y a 30 h : page Prospects « Depuis ta dernière visite (" + fr(vu) + " " + hm(vu) + ") : », 6 nouveautés (2 inscriptions, 1 questionnaire, 2 clics, 1 bilan), badge « 6 »", (await texte(page, "#pr-nouveautes")).includes("Depuis ta dernière visite (" + fr(vu) + " " + hm(vu) + ") :") && (await texte(page, "#pr-nouveautes .seance-c-tete .pastille")) === "6" && JSON.stringify(types) === JSON.stringify(["2 inscriptions", "1 questionnaire rempli", "2 clics « Plan d'action »", "1 case « J'ai réservé »"]) && JSON.stringify(await badge(page)) === badge2("6") /* v83 (bloc 3) : badge en double */, JSON.stringify(types) + " · " + JSON.stringify(await badge(page)));
+    ok("coach_notifs.vu il y a 30 h : page Prospects « Depuis ta dernière visite (" + fr(vu) + " " + hm(vu) + ") : », 6 nouveautés (2 inscriptions, 1 questionnaire, 2 clics, 1 bilan) ; badge = urgences (v105)", (await texte(page, "#pr-nouveautes")).includes("Depuis ta dernière visite (" + fr(vu) + " " + hm(vu) + ") :") && (await texte(page, "#pr-nouveautes .seance-c-tete .pastille")) === "6" && JSON.stringify(types) === JSON.stringify(["2 inscriptions", "1 questionnaire rempli", "2 clics « Plan d'action »", "1 case « J'ai réservé »"]) && JSON.stringify(await badge(page)) === await badgeU(page), JSON.stringify(types) + " · " + JSON.stringify(await badge(page)));
     ok("… le clic d'Émilie d'il y a 31 h et son questionnaire (40 h) n'y sont pas ; rien n'est écrit", !(await texte(page, "#pr-nouveautes")).includes("Émilie Rousseau · questionnaire rempli") && (await page.$$("#pr-nouveautes .nv-liste li")).length === 6 && db.ecritures.length === 0);
   });
   await bloc("E. Nouveautés : coach_notifs piégé", async () => {
@@ -998,7 +1003,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     const total = Date.now() - t1;   // changement d'adresse → cartes affichées
     const app = await page.evaluate(() => { const z = document.getElementById("pr-vue"); const t = performance.now(); outilProspects.rendre(z); return Math.round(performance.now() - t); }).catch(() => 99999);
     ok(`1 008 prospects : page complète depuis le changement d'adresse et construite côté app, chacun < 2 000 ms (v84 : Prospects, liste et Nouveautés, en ${totalL} ms, construite en ${appL} ms ; Newsletter en ${totalN} ms, construite en ${appN} ms ; Suivi commercial, cartes, en ${total} ms, construit en ${app} ms ; les trois constructions ensemble en ${appL + appN + app} ms)`, total < 2000 && app < 2000 && totalL < 2000 && appL < 2000 && totalN < 2000 && appL + appN + app < 2000, "Prospects " + totalL + " ms · app " + appL + " ms · Newsletter " + totalN + " ms · app " + appN + " ms · Suivi commercial " + total + " ms · app " + app + " ms · constructions " + (appL + appN + app) + " ms");
-    ok("1 008 prospects : « 1008 comptes gratuits », badge « 99+ »", (await texte(page, "#pr-vue .masthead .lede")).startsWith("1008 comptes gratuits") && JSON.stringify(await badge(page)) === badge2("99+") /* v83 (bloc 3) : badge en double */, (await texte(page, "#pr-vue .masthead .lede")) + " · " + JSON.stringify(await badge(page)));
+    ok("1 008 prospects : « 1008 comptes gratuits », badge = urgences (v105)", (await texte(page, "#pr-vue .masthead .lede")).startsWith("1008 comptes gratuits") && JSON.stringify(await badge(page)) === await badgeU(page), (await texte(page, "#pr-vue .masthead .lede")) + " · " + JSON.stringify(await badge(page)));
     const tf = await page.evaluate(() => { const t = performance.now(); document.querySelector('[data-filtre="tous"]').click(); return Math.round(performance.now() - t); });
     ok(`filtre « Tous » en ${tf} ms : 50 cartes, « Afficher 50 de plus (958 restants) », « 1008 prospects »`, tf < 2000 && (await page.$$("#pr-liste .sc-carte")).length === 50 && (await texte(page, "#pr-plus")) === "Afficher 50 de plus (958 restants)" && (await texte(page, "#pr-compte")) === "1008 prospects", (await texte(page, "#pr-plus")) + " · " + (await texte(page, "#pr-compte")));
     const avant50 = await uids(page);
@@ -1039,7 +1044,7 @@ const chrono = page => page.$$eval("#fiche-chrono ol li", l => l.map(li => ({ t:
     await filtre(page, "tous");
     ok("mobile : filtre « Tous » (8 cartes, dont la piégée), toujours sans débordement", (await uids(page)).length === 8 && !(await deborde(page)), String(await page.evaluate(() => document.documentElement.scrollWidth)));
     const bb = await page.$$eval('#barre-bas a[data-id="prospects"] .nav-badge, #nav a[data-id="prospects"] .nav-badge', l => l.map(e => e.textContent.trim())).catch(() => []);
-    ok("mobile : badge « 11 » sur l'onglet Prospects", bb.length >= 1 && bb.every(x => x === "11"), JSON.stringify(bb));
+    { const u = String(await urgN(page)); ok("mobile : badge des urgences sur l'onglet Prospects (v105)", u !== "0" && u !== "-1" && bb.length >= 1 && bb.every(x => x === u), JSON.stringify(bb) + " · " + u); }
     await page.screenshot({ path: path.join(OUT, "prospects-mobile.png"), fullPage: true });
     await ouvrirFiche(page, INES);
     ok("mobile : fiche d'Inès (réponses, chronologie, lien de réservation) sans débordement", !!(await page.$("#dc-lien")) && !(await deborde(page)), String(await page.evaluate(() => document.documentElement.scrollWidth)));
